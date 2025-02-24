@@ -1,0 +1,173 @@
+body {
+    font-family: Arial, sans-serif;
+    color: white;
+    line-height: 1.6;
+    margin: 0;
+    background-color: orange; /* #322cdb тема ЛНР*/
+    min-height: 100vh;
+	width: 100%;
+    display: flex;
+    flex-direction: column; /* Добавляем flex-direction: column */
+}
+
+header {
+    background: #00e7ff;
+    color: #838383;
+    padding: 10px 20px;
+    text-align: center;
+}
+
+main {
+    flex: 1; /*  Это заставляет main занимать все доступное пространство */
+    padding: 20px;
+    position: relative; /* Добавляем, чтобы absolute элементы не вылезали */
+}
+
+footer {
+    background-color: #c71c1c; /* Фон футера */
+    color: white; /* Цвет текста футера */
+    text-align: center; /* Выравнивание текста по центру */
+    width: 100%; /* Футер занимает всю ширину */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+	background-color: #3e3c59;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #007bff;
+    color: white;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: color;
+	padding: 10px 15px;
+}
+
+#delete-cargo-btn {
+	background-color: #cb0303;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background-color: green;
+    color: gray;
+    border: 6px solid gray;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.delete-btn {
+    background-color: red;
+    color: gray;
+    border: 6px solid gray;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+#notification {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+.sort-policy {
+	display: flex;
+    justify-content: space-between;
+}
+
+.box {
+	width: 50%;
+	padding: 10px;
+	background-color: lightblue;
+	text-align: center;
+}
+
+#secret-settings {
+	display: none; /* Скрываем элемент по умолчанию */
+	padding: 20px;
+	background-color: lightgreen;
+	text-align: center;
+	margin-top: 20px;
+}
+
+#text-notification {
+    text-align: left; /* Центрирует текст */
+	padding: 15px 15px;
+	margin: 0; /* Убираем отступы */
+    font-weight: normal;
+}
+
+#dest-input {
+	width: 450px;
+	height: 40px;
+	font-size: 16px;
+	margin: 20px;
+}
+
+/* Стиль для модального окна */
+#modal {
+	display: none; /* Скрыть модальное окно по умолчанию */
+	position: fixed;
+	z-index: 1;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	background-color: rgb(0, 0, 0); /* Цвет фона */
+	background-color: rgba(0, 0, 0, 0.4); /* Прозрачный фон */
+}
+
+#modal-content {
+	background-color: #8d89cc;
+	margin: 15% auto;
+	padding: 20px;
+	border: 1px solid #888;
+	width: 80%;
+}
+
+/* Стиль для таблицы */
+#existing-destinations {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#existing-destinations th, 
+#existing-destinations td { /* Добавлен префикс #existing-ferries */
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+#existing-destinations th { /* Добавлен префикс #existing-ferries */
+    background-color: #0011ff;
+}
