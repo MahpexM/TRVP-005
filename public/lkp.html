@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет администратора порта</title>
+	<link rel="stylesheet" href="lkp.css">
+	<link rel="shortcut icon" href="#">
+	<script type="module" src="script.js"></script> 		<!-- общий скрипт для страницы -->
+	<script type="module" src="table_reactor.js"></script> 	<!-- данные из БД для таблицы -->
+	<script type="module" src="flowing_table.js"></script>	<!-- для работы всплывающей таблицы -->
+</head>
+<body>
+    <header>
+        <h1>Личный кабинет администратора порта</h1>
+    </header>
+    
+    <main>
+	
+		<!-- Основной бизнес-процесс
+
+		В главном подразделе "список рейсов" выводится список рейсов в формате табличных записей {ID, Пункт назначения, Паром, Действия}.
+		
+		Каждый рейс, по определению, — это ID, пункт и паром.
+		
+		Помимо опции создания и удаления рейса, доступны опции редактирования полей	существующего: можно отредактировать
+			а) пункт назначения;
+			б) паром.
+			Тогда в опции переноса грузов с одного рейса на другой необходимо сделать проверку неравенства грузоподъёмности, обозначив
+		грузоподъёмность как K, получим что для переноса грузов с рейса 1 на рейс 2 для разрешения операции необходимо, чтобы было верно:
+			K2 >= K1. При K1 > K2 необходимо выводить сообщение об ошибке.
+			Пользователь должен сам задать конфигурацию грузов и отправить запрос на в систему, а система должна ответить.
+			
+		оставить режим переноса грузов, а можно сделать отдельную кнопку, которая бы отвечала за смену корабля при сохранении грузов,
+		которые должны быть перевезены рейсом (в этом случае такая операция должна быть	разрешена только для пар рейсов, у которых
+		пункты назначения одинаковые)).)
+		
+		Снизу от таблицы есть кнопка "Добавить рейс", которая
+	
+		--->
+		<details id ="secret-settings">
+			<summary>Меню разработчика (вызов по Alt + F)</summary>
+			<p>
+				<a href = "photo_2025-01-25_15-07-28.jpg">TZ</a>
+				<section id = "p-sort">
+					<h2>Политика сортировки записей в таблицах</h2>
+					<section class = "sort-policy">
+						<div class = "box">
+							<input type = "radio" name = "direction-sort-by" id = "ds-fifo">По возрастанию</input>
+						</div>
+						<div class = "box">
+							<input type = "radio" name = "direction-sort-by" id = "ds-lifo">По убыванию</input>
+						</div>
+					</section>
+					<section class = "sort-policy">
+						<div class = "box">
+							<input type = "radio" name = "field-sort-by" id = "fs-by-id">ID</input>
+						</div>
+						<div class = "box">
+							<input type = "radio" name = "field-sort-by" id = "fs-by-dest">Пункт назначения</input>
+						</div>
+						<div class = "box">
+							<input type = "radio" name = "field-sort-by" id = "fs-by-ferry">Паром</input>
+						</div>
+					</section>
+					<br><button class = "setting">Применить настройку</button>
+				</section>
+			</p>
+		</details>
+		
+		<details id="list-flights">
+			<summary>Развернуть/свернуть список рейсов</summary>
+			<section id="flights">
+			<h2>Список рейсов</h2>
+			<p>
+				<table>
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Пункт назначения</th>
+							<th>Паром</th>
+							<th>Действия</th>
+						</tr>
+					</thead>
+					<tbody id="flight-list">
+						<!-- Список рейсов будет динамически обновляться здесь -->
+					</tbody>
+				</table>
+				<button id="add-flight-btn">Добавить рейс</button>
+				</section>
+				<section id="flight-form" class="hidden">
+					<h2 id="form-title">Добавление рейса</h2>
+					<form id="flight-edit-form">
+						<label id="flight-id">ID: NONE</label>
+						<label for="destination">Пункт назначения:</label>
+						<select id="destination" name="destination" required>
+							<option></option>
+							<!-- Варианты пунктов назначения -->
+						</select>
+
+						<label for="ferry">Паром:</label>
+						<select id="ferry" name="ferry" required>
+							<!-- Варианты паромов -->
+						</select>
+
+						<button type="submit">Сохранить рейс</button>
+						<button type="button" id="cancel-btn">Отмена</button>
+					</form>
+				</section>
+			</p>
+		</details>
+
+		<details id="destinations-details">
+			<div id="modal">
+				<div id="modal-content">
+					<span id="closeModal" style="cursor:pointer;">✖ Закрыть</span>
+					<h2>Список существующих пунктов назначения</h2>
+					<table id = "existing-destinations">
+						<thead>
+							<tr>
+								<th>Пункт назначения</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Название (JS'ом надо выгружать)</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<!--- 1 паром может совершать много рейсов, что соответствует разным строкам
+			{<ID> <Наименование> <Кол-во машиномест> <Кол-во ячеек для грузов>}
+			то есть необходимо предусмотреть последовательность их выполнения
+			
+			Список перевозимых грузов
+			и
+			Список перевозимых автомобилей
+			
+			Типа:
+				на этот рейс должно пойти столько-то машин (проверяем что машиноместа свободные есть)
+				и
+				на этот рейс надо
+			
+			--->
+			<summary>Развернуть/свернуть меню пунктов назначения</summary>
+			<section id="destination-menu">
+				<h2>Просмотр пунктов назначения</h2>
+					<button id = "view-list-of-destinations">Просмотреть список пунктов назначения</button>
+				<h2>Добавление пунктов назначения</h2>
+					<input type = "text" id = "dest-input" placeholder = "Введите название нового пункта назначения">
+					<button id = "add-new-destination">Добавить ПН</button>
+					<br>
+					<div id = "text-notification"> <h3>Тщательно перепроверьте ввод перед отправкой формы!</h3> <br>
+					После нажатия кнопки "Добавить ПН"
+					во всплывающем окне вам будет предложено подтвердить изменения,
+					после чего их дальнейшее редактирование без внешнего вмешательства
+					со стороны системного администратора станет невозможным.</div>
+			</section>
+		</details>
+					<!----
+				
+					<button id="transfer-cargo-btn">Перенести груз с рейса</button></li>
+					<li><text>Перевести груз с рейса ID: id1 на рейс с ID: id2</text></li>					
+					<text>Выберите ID рейса, с которого вы хотите перенести груз</text>
+					<select id = "controled-flight">
+						<option value = "1">1</option>
+						<option>2</option>
+						<option>3</option>
+						<option>4</option>
+					</select>
+					
+					<text>Выберите ID рейса, на который вы хотите перенести груз</text>
+					<select id = "control-flight">
+						<option value = "1">1</option>
+						<option>2</option>
+						<option>3</option>
+						<option>4</option>
+					</select----->
+					
+				<!---h2>Редактор грузов</h2>
+				<h2>Редактор списков грузов</h2>
+				<br>
+				<br>
+				<text>Выберите действие, которое хотите совершить</text>
+				<ul>
+					<li><text>Редактор списков грузов</text></li>
+					<li><text>Редактор грузов</text>					
+				</ul--->
+				<!----table id = "cargo-list">
+					<thead>
+						<tr>
+							<th>ΙD</th>
+							<th>Наименование</th>
+							<th>Количество машиномест</th>
+							<th>Количество ячеек для грузов</th>
+						</tr>
+					</thead>
+					
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>Юрий Гагарин</td>
+							<td>200 000</td>
+							<td>7 000 000</td>
+						</tr>
+					<tbody>
+				</table---->
+				<!-- а что если отображать через слеш: занято / из того сколько всего там -->
+				
+				<!---table id = "cargo-list">
+					<thead>
+						<tr>
+							<th>ID рейса</th>
+							<th>Тип пассажира</th>
+							<th>Типа автобемоль (легкий, грузовой, тягач)</th>
+							<th>ID</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Название (JS'ом надо выгружать)</td>
+							<td>Груз / автомоль</td>
+							<td>ну типа H, ну типа Heavy, ну типа тягач</td>
+							<td>AI-тишник</td>
+						</tr>
+					</tbody>
+				</table---->
+				
+		<details id ="loads-list">
+			<summary>Развернуть/свернуть редактор грузов</summary>
+			<section id="cargo-vehicles">
+			<p>
+				<h2>Просмотр списка пассажиров</h2>
+				<button id = "view-passanger">Найти информацию по пассажиру</button>
+				<br>
+				<h2>Режим сравнения</h2> <!---лучше его как галочку реализовать в меню такого открытия--->
+				<button id = "view-list-of-passangers-comparison">Открыть меню переноса грузов</button>
+				<br>
+				<h2>Редактор грузов</h2>
+				<div id="">
+					<form>
+						<label>
+							<input type="radio" name="cargo-type" value="container"> Контейнер
+						</label>
+						<label>
+							<input type="radio" name="cargo-type" value="box"> Коробка
+						</label>
+					</form>
+					<br>
+					<button id="add-cargo-btn">Добавить пассажира</button>
+					<button id="delete-cargo-btn">Удалить пассажира</button>
+				</div>
+			</p>
+			</section>
+		</details>
+		
+		<details id ="loads-monitor">
+			<summary>Развернуть/свернуть монитор назначений</summary>
+			<section id="cargo-vehicles">
+			<p>
+				<h2>Задействованные в рейсах паромы</h2>
+				
+				<table id = "flight-cargo-vehicles">
+					<thead>
+						<tr>
+							<th>ID рейса</th>
+							<th>Паром</th>
+							<th>Грузов</th>
+							<th>Автомобилей</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>1</td>
+							<td>Муромец Илья</td>
+							<td>50/50</td>
+							<td>10/100</td>
+						</tr>
+					</tbody>
+				</table>
+			</p>
+			</section>
+		</details>
+			
+        <div id="notification" class="hidden"></div>
+	
+	</main>
+	
+    <footer>
+        <p>&copy; 2025 Порт</p>
+    </footer>
+</body>
+
+<script>
+	document.addEventListener('keydown', function(event) {
+		// Проверяем, нажата ли клавиша Alt и одновременно F
+		if (event.altKey && event.key === 'f') {
+			event.preventDefault(); // Предотвращаем действие по умолчанию
+			const messageDiv = document.getElementById('secret-settings');
+			
+			// Переключаем видимость элемента
+			if (messageDiv.style.display === "none" || messageDiv.style.display === "") {
+				messageDiv.style.display = "block"; // Показываем элемент
+			} else {
+				messageDiv.style.display = "none"; // Скрываем элемент
+			}
+		}
+	});
+</script>
+
+</html>
